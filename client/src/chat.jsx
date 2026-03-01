@@ -274,259 +274,291 @@ export default function Chat() {
     return <div style={{ padding: 24, color: "#fff" }}>Yükleniyor...</div>;
   }
 return (
-  <div className="chatLayout">
-    {isSidebarOpen ? (
-      <div
-        className="sidebarOverlay"
-        onClick={() => setIsSidebarOpen(false)}
-      />
-    ) : null}
-    {/* LEFT SIDEBAR */}
-    <aside className={`sidebar ${isSidebarOpen ? "sidebar--open" : ""}`}>
-      <div className="sidebar__top">
-        <h3 className="sidebar__title">Sohbetler</h3>
-
-        <div className="sidebar__me">
-          <span className="sidebar__meLabel">Benim UID</span>
-          <button
-            className="sidebar__meChip"
-            onClick={() => navigator.clipboard.writeText(myUid)}
-            title="Kopyalamak için tıkla"
-            type="button"
-          >
-            {myUid}
-          </button>
+  <div className="appShell">
+    {/* TOP BRAND (HER SAYFA) */}
+    <header className="appTopbar">
+      <div className="appTopbar__inner">
+        <div className="brand">
+          <div className="brand__logo" aria-hidden="true">
+            <span className="brand__ring" />
+            <span className="brand__dot" />
+          </div>
+          <div className="brand__text">
+            <div className="brand__name">LivePing</div>
+            <div className="brand__tag">Anlık mesaj • Canlı durum</div>
+          </div>
         </div>
+
+        {/* Mobilde menü butonu (her sayfada görünsün) */}
+        <button
+          className="topbarMenuBtn"
+          type="button"
+          onClick={() => setIsSidebarOpen(true)}
+          aria-label="Sohbet listesini aç"
+        >
+          ☰
+        </button>
       </div>
+    </header>
 
-      <div className="sidebar__list">
-        {conversations?.length ? (
-          conversations.map((c) => {
-            const other = Array.isArray(c.members)
-              ? c.members.find((u) => u !== myUid)
-              : null;
+    {/* SAYFA İÇERİĞİ */}
+    <div className="chatLayout">
+      {isSidebarOpen ? (
+        <div
+          className="sidebarOverlay"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      ) : null}
 
-            const lastText = c.lastMessageText ? String(c.lastMessageText) : "Mesaj yok";
+      {/* LEFT SIDEBAR */}
+      <aside className={`sidebar ${isSidebarOpen ? "sidebar--open" : ""}`}>
+        <div className="sidebar__top">
+          <h3 className="sidebar__title">Sohbetler</h3>
 
-            return (
-              <button
-                key={c.id}
-                type="button"
-                className={`sidebar__item ${c.id === conversationId ? "sidebar__item--active" : ""}`}
-                onClick={() => {
-                  if (!other) return;
-                  setConversationId(c.id);
-                  setOtherUid(other);
-                  setIsSidebarOpen(false);
-                }}
-              >
-                <div className="sidebar__row">
-                <div className="sidebar__name">{other || "?"}</div>
-
-                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                  <div className="sidebar__time">
-                    {c.lastMessageAt?.toDate?.()?.toLocaleTimeString?.([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }) ?? ""}
-                  </div>
-
-                  <button
-                    className="sidebar__delete"
-                    onClick={(e) => {
-                      e.stopPropagation(); // chat açılmasın
-                      deleteConversation(c.id);
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-                <div className="sidebar__last">{lastText}</div>
-              </button>
-            );
-          })
-        ) : (
-          <div className="sidebar__empty">
-            Henüz sohbet yok. <br />
-            Sağdan UID ile sohbet başlat.
+          <div className="sidebar__me">
+            <span className="sidebar__meLabel">Benim UID</span>
+            <button
+              className="sidebar__meChip"
+              onClick={() => navigator.clipboard.writeText(myUid)}
+              title="Kopyalamak için tıkla"
+              type="button"
+            >
+              {myUid}
+            </button>
           </div>
-        )}
-      </div>
-    </aside>
+        </div>
 
-    {/* RIGHT PANEL*/}
-    <div className="chat">
-      <div className="chat__panel">
-        {!conversationId ? (
-          <div className="chat__start">
-            <div className="chat__startTop">
-              <h2 className="chat__title">Sohbet Aç</h2>
-              <p className="chat__hint">
-                Karşı tarafın UID bilgisini yazıp "Sohbeti Aç" butonuna tıklayın
-              </p>
-            </div>
+        <div className="sidebar__list">
+          {conversations?.length ? (
+            conversations.map((c) => {
+              const other = Array.isArray(c.members)
+                ? c.members.find((u) => u !== myUid)
+                : null;
 
-            <div className="chat__startRow">
-              <input
-                className="chat__input"
-                value={otherUid}
-                onChange={(e) => setOtherUid(e.target.value)}
-                placeholder="Karşı taraf UID"
-              />
-              <button className="chat__btn" onClick={openConversation}>
-                Sohbeti Aç
-              </button>
-            </div>
+              const lastText = c.lastMessageText
+                ? String(c.lastMessageText)
+                : "Mesaj yok";
 
-            <div className="chat__uidRow">
-              <span className="chat__uidLabel">Benim UID "Kopyalamak için tıkla"</span>
-              <button
-                className="chat__uidChip"
-                onClick={() => navigator.clipboard.writeText(myUid)}
-                title="Kopyalamak için tıkla"
-                type="button"
-              >
-                {myUid}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="chat__header">
-              <div>
+              return (
                 <button
-                  className="chat__menuBtn"
+                  key={c.id}
                   type="button"
-                  onClick={() => setIsSidebarOpen(true)}
-                  aria-label="Sohbet listesini aç"
+                  className={`sidebar__item ${
+                    c.id === conversationId ? "sidebar__item--active" : ""
+                  }`}
+                  onClick={() => {
+                    if (!other) return;
+                    setConversationId(c.id);
+                    setOtherUid(other);
+                    setIsSidebarOpen(false);
+                  }}
                 >
-                  ☰
-                </button>
-                <div style={{flex:1}}>
-                  <h2 className="chat__title">Sohbet</h2>
+                  <div className="sidebar__row">
+                    <div className="sidebar__name">{other || "?"}</div>
 
-                <div className="chat__uidRow">
-                  <span className="chat__uidLabel">Benim UID "Kopyalamak için tıkla"</span>
-                  <button
-                    className="chat__uidChip"
-                    onClick={() => navigator.clipboard.writeText(myUid)}
-                    title="Kopyalamak için tıkla"
-                    type="button"
-                  >
-                    {myUid}
-                  </button>
-                </div>
-
-                <div className="chat__sub">
-                  {otherOnline === null
-                    ? "Durum alınıyor..."
-                    : otherOnline
-                    ? "Online"
-                    : `Offline • last seen: ${otherLastSeenAt?.toDate?.()?.toLocaleString?.() ?? "?"}`}
-                </div>
-                </div>
-                
-              </div>
-
-              <div className="chat__badges">
-                {otherOnline ? <span className="badge badge--online">online</span> : null}
-                {otherTyping ? <span className="badge badge--typing">yazıyor…</span> : null}
-              </div>
-            </div>
-
-            <div className="chat__box">
-              {messages.map((m) => {
-                const isMe = m.senderId === myUid;
-
-                const isMyLast = isMe && myLastMsg && m.id === myLastMsg.id;
-                const tick = isMyLast ? (seen ? "✓✓" : "✓") : null;
-
-                return (
-                  <div
-                    key={m.id}
-                    className={`chat__row ${isMe ? "chat__row--me" : "chat__row--other"}`}
-                  >
-                    <div className={`chat__bubble ${isMe ? "chat__bubble--me" : "chat__bubble--other"}`}>
-                      <div className="chat__meta">{isMe ? "Ben" : "Karşı"}</div>
-
-                      <div className="chat__textRow">
-                        <div className="chat__text">{m.text}</div>
-
-                        {tick ? (
-                          <span className={`chat__tick ${seen ? "chat__tick--seen" : ""}`}>
-                            {tick}
-                          </span>
-                        ) : null}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <div className="sidebar__time">
+                        {c.lastMessageAt?.toDate?.()?.toLocaleTimeString?.([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }) ?? ""}
                       </div>
 
-                      {isMe ? (
-                        <div className="chat__actions">
-                          <button
-                            className="chat__delete"
-                            type="button"
-                            onClick={() => setConfirmDelete({ id: m.id, text: m.text })}
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      ) : null}
+                      <button
+                        className="sidebar__delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteConversation(c.id);
+                        }}
+                        type="button"
+                        aria-label="Sohbeti sil"
+                        title="Sohbeti sil"
+                      >
+                        ✕
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-              <div ref={bottomRef} />
+
+                  <div className="sidebar__last">{lastText}</div>
+                </button>
+              );
+            })
+          ) : (
+            <div className="sidebar__empty">
+              Henüz sohbet yok. <br />
+              Sağdan UID ile sohbet başlat.
             </div>
+          )}
+        </div>
+      </aside>
 
-            <div className="chat__composer">
-              <input
-                className="chat__input"
-                value={text}
-                onChange={(e) => onChangeText(e.target.value)}
-                placeholder="Mesaj yaz…"
-                onKeyDown={(e) => e.key === "Enter" && send()}
-              />
+      {/* RIGHT PANEL */}
+      <div className="chat">
+        <div className="chat__panel">
+          {!conversationId ? (
+            <div className="chat__start">
+              <div className="chat__startTop">
+                <h2 className="chat__title">Sohbet Aç</h2>
+                <p className="chat__hint">
+                  Karşı tarafın UID bilgisini yazıp "Sohbeti Aç" butonuna tıklayın
+                </p>
+              </div>
 
-              <button className="chat__btn" onClick={send}>
-                Gönder
-              </button>
+              <div className="chat__startRow">
+                <input
+                  className="chat__input"
+                  value={otherUid}
+                  onChange={(e) => setOtherUid(e.target.value)}
+                  placeholder="Karşı taraf UID"
+                />
+                <button className="chat__btn" onClick={openConversation}>
+                  Sohbeti Aç
+                </button>
+              </div>
+
+              <div className="chat__uidRow">
+                <span className="chat__uidLabel">
+                  Benim UID "Kopyalamak için tıkla"
+                </span>
+                <button
+                  className="chat__uidChip"
+                  onClick={() => navigator.clipboard.writeText(myUid)}
+                  title="Kopyalamak için tıkla"
+                  type="button"
+                >
+                  {myUid}
+                </button>
+              </div>
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <div className="chat__header">
+                <div style={{ flex: 1 }}>
+                  <h2 className="chat__title">Sohbet</h2>
 
-      {confirmDelete ? (
-        <div className="modal__backdrop" onClick={() => setConfirmDelete(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal__title">Mesaj silinsin mi?</h3>
-            <p className="modal__text">Bu işlem geri alınamaz.</p>
+                  <div className="chat__uidRow">
+                    <span className="chat__uidLabel">
+                      Benim UID "Kopyalamak için tıkla"
+                    </span>
+                    <button
+                      className="chat__uidChip"
+                      onClick={() => navigator.clipboard.writeText(myUid)}
+                      title="Kopyalamak için tıkla"
+                      type="button"
+                    >
+                      {myUid}
+                    </button>
+                  </div>
 
-            <div className="modal__preview">{confirmDelete.text}</div>
+                  <div className="chat__sub">
+                    {otherOnline === null
+                      ? "Durum alınıyor..."
+                      : otherOnline
+                      ? "Online"
+                      : `Offline • last seen: ${
+                          otherLastSeenAt?.toDate?.()?.toLocaleString?.() ?? "?"
+                        }`}
+                  </div>
+                </div>
 
-            <div className="modal__actions">
-              <button
-                className="modal__btn modal__btn--ghost"
-                type="button"
-                onClick={() => setConfirmDelete(null)}
-              >
-                Vazgeç
-              </button>
+                <div className="chat__badges">
+                  {otherOnline ? <span className="badge badge--online">online</span> : null}
+                  {otherTyping ? <span className="badge badge--typing">yazıyor…</span> : null}
+                </div>
+              </div>
 
-              <button
-                className="modal__btn modal__btn--danger"
-                type="button"
-                onClick={async () => {
-                  await deleteMessage(confirmDelete.id);
-                  setConfirmDelete(null);
-                }}
-              >
-                Sil
-              </button>
+              <div className="chat__box">
+                {messages.map((m) => {
+                  const isMe = m.senderId === myUid;
+
+                  const isMyLast = isMe && myLastMsg && m.id === myLastMsg.id;
+                  const tick = isMyLast ? (seen ? "✓✓" : "✓") : null;
+
+                  return (
+                    <div
+                      key={m.id}
+                      className={`chat__row ${isMe ? "chat__row--me" : "chat__row--other"}`}
+                    >
+                      <div className={`chat__bubble ${isMe ? "chat__bubble--me" : "chat__bubble--other"}`}>
+                        <div className="chat__meta">{isMe ? "Ben" : "Karşı"}</div>
+
+                        <div className="chat__textRow">
+                          <div className="chat__text">{m.text}</div>
+
+                          {tick ? (
+                            <span className={`chat__tick ${seen ? "chat__tick--seen" : ""}`}>
+                              {tick}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {isMe ? (
+                          <div className="chat__actions">
+                            <button
+                              className="chat__delete"
+                              type="button"
+                              onClick={() => setConfirmDelete({ id: m.id, text: m.text })}
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={bottomRef} />
+              </div>
+
+              <div className="chat__composer">
+                <input
+                  className="chat__input"
+                  value={text}
+                  onChange={(e) => onChangeText(e.target.value)}
+                  placeholder="Mesaj yaz…"
+                  onKeyDown={(e) => e.key === "Enter" && send()}
+                />
+
+                <button className="chat__btn" onClick={send}>
+                  Gönder
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {confirmDelete ? (
+          <div className="modal__backdrop" onClick={() => setConfirmDelete(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="modal__title">Mesaj silinsin mi?</h3>
+              <p className="modal__text">Bu işlem geri alınamaz.</p>
+
+              <div className="modal__preview">{confirmDelete.text}</div>
+
+              <div className="modal__actions">
+                <button
+                  className="modal__btn modal__btn--ghost"
+                  type="button"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Vazgeç
+                </button>
+
+                <button
+                  className="modal__btn modal__btn--danger"
+                  type="button"
+                  onClick={async () => {
+                    await deleteMessage(confirmDelete.id);
+                    setConfirmDelete(null);
+                  }}
+                >
+                  Sil
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   </div>
 );
