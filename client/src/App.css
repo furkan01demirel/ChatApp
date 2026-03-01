@@ -387,7 +387,7 @@ body{
 
 /* Messages */
 .chat__box{
-  height: 460px;
+  height: 400px;
   overflow:auto;
   padding: 16px 14px;
   background: rgba(10,10,10,.35);

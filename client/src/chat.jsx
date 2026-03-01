@@ -64,29 +64,52 @@ export default function Chat() {
     if (!myUid) return;
 
     const myRef = doc(db, "users", myUid);
-
+    let beatTimer = null;
     const setOnline = async () => {
-      await setDoc(
-        myRef,
-        { isOnline: true, lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp() },
-        { merge: true }
-      );
-    };
+    await setDoc(
+      myRef,
+      {
+        isOnline: true,
+        lastActiveAt: serverTimestamp(), // heartbeat için
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  };
 
     const setOffline = async () => {
       try {
         await setDoc(
           myRef,
-          { isOnline: false, lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp() },
+          {
+            isOnline: false,
+            lastSeenAt: serverTimestamp(),  //  son görülme
+            updatedAt: serverTimestamp(),
+          },
           { merge: true }
         );
       } catch {}
     };
 
     setOnline();
+    //heartbeat: 15 sn’de bir aktifliğini güncelle
+    beatTimer = setInterval(() => {
+      setOnline();
+    }, 15000);
 
-    window.addEventListener("beforeunload", setOffline);
-    return () => window.removeEventListener("beforeunload", setOffline);
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") setOffline();
+      else setOnline();
+    };
+   window.addEventListener("beforeunload", setOffline);
+   document.addEventListener("visibilitychange", onVisibility);
+   return () => {
+    if (beatTimer) clearInterval(beatTimer);
+    window.removeEventListener("beforeunload", setOffline);
+    document.removeEventListener("visibilitychange", onVisibility);
+    // component unmount → offline yazmayı dene
+    setOffline();
+  };
   }, [myUid]);
 
   const openConversation = async () => {
@@ -140,12 +163,32 @@ export default function Chat() {
 
   // Online/lastSeen dinle
   useEffect(() => {
-    if (!otherUserRef) return;
-    return onSnapshot(otherUserRef, (snap) => {
-      const d = snap.data();
-      setOtherOnline(d?.isOnline ?? null);
-      setOtherLastSeenAt(d?.lastSeenAt ?? null);
-    });
+   if (!otherUserRef) return;
+
+  return onSnapshot(otherUserRef, (snap) => {
+    const d = snap.data();
+
+    const isOnlineFlag = d?.isOnline ?? null;
+    const lastActiveAt = d?.lastActiveAt ?? null;
+    const lastSeenAt = d?.lastSeenAt ?? null;
+
+    //  heartbeat ile gerçek online: son 30 sn içinde aktifse online say
+    let online = null;
+    if (isOnlineFlag === null) {
+      online = null;
+    } else if (isOnlineFlag === false) {
+      online = false;
+    } else {
+      // isOnline true ise bile, stale olabilir
+      const ms =
+        typeof lastActiveAt?.toMillis === "function" ? lastActiveAt.toMillis() : 0;
+      const fresh = Date.now() - ms < 30000; // 30sn
+      online = fresh;
+    }
+
+    setOtherOnline(online);
+    setOtherLastSeenAt(lastSeenAt);
+  });
   }, [otherUserRef]);
 
   // Reads dinle
@@ -436,19 +479,7 @@ return (
                 <div style={{ flex: 1 }}>
                   <h2 className="chat__title">Sohbet</h2>
 
-                  <div className="chat__uidRow">
-                    <span className="chat__uidLabel">
-                      Benim UID "Kopyalamak için tıkla"
-                    </span>
-                    <button
-                      className="chat__uidChip"
-                      onClick={() => navigator.clipboard.writeText(myUid)}
-                      title="Kopyalamak için tıkla"
-                      type="button"
-                    >
-                      {myUid}
-                    </button>
-                  </div>
+                 
 
                   <div className="chat__sub">
                     {otherOnline === null
@@ -462,7 +493,7 @@ return (
                 </div>
 
                 <div className="chat__badges">
-                  {otherOnline ? <span className="badge badge--online">online</span> : null}
+                  {/* {otherOnline ? <span className="badge badge--online">online</span> : null} */}
                   {otherTyping ? <span className="badge badge--typing">yazıyor…</span> : null}
                 </div>
               </div>
