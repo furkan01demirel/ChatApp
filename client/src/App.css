@@ -1,76 +1,82 @@
 :root{
-  /* DARK BLUE THEME */
-  --bg: #0B0F14;
-  --panel: #111827;
-  --panel-2: #1A2230;
+  /* ===== DARK BLACK + GREEN ACCENT ===== */
+  --bg: #050607;                 /* neredeyse siyah */
+  --panel: rgba(18, 20, 22, .72); /* siyahın açık tonu (cam) */
+  --panel-2: rgba(26, 28, 31, .62);
 
-  --text: #E2E8F0;
-  --muted: rgba(226,232,240,.65);
+  --text: #F6F7FB;               /* temiz beyaz tonu */
+  --muted: rgba(246,247,251,.66);
 
-  --border: rgba(226,232,240,.10);
+  --border: rgba(255,255,255,.10);
 
-  --me: #1E293B;
-  --other: #334155;
+  /* bubbles */
+  --me: rgba(37, 211, 102, .16);      /* canlı yeşil vurgulu */
+  --other: rgba(255,255,255,.06);     /* soft gri */
 
-  --accent: #3B82F6;
-  --seen: #60A5FA;
+  /* accents */
+  --accent: #25D366;
+  --accent-2: #128E80;
+  --seen: #DFF8CC;
 
-  --shadow: 0 20px 45px rgba(0,0,0,.55);
+  --danger: #FF4D4D;
+
+  --shadow: 0 22px 70px rgba(0,0,0,.70);
 }
 
-html, body{
-  height:100%;
-}
+html, body{ height:100%; }
 
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto;
   color: var(--text);
 
+  /* Siyah temelde çok hafif yeşil aurora */
   background:
-    radial-gradient(1000px 700px at 20% 10%, rgba(59,130,246,.12), transparent 55%),
-    radial-gradient(900px 600px at 85% 20%, rgba(30,41,59,.35), transparent 60%),
-    var(--bg);
+    radial-gradient(900px 650px at 12% 18%, rgba(37,211,102,.10), transparent 62%),
+    radial-gradient(900px 650px at 88% 20%, rgba(18,142,128,.08), transparent 62%),
+    radial-gradient(900px 720px at 55% 92%, rgba(255,255,255,.05), transparent 62%),
+    linear-gradient(180deg, #030304, var(--bg));
 }
 
 /* ===== LAYOUT ===== */
-
 .chat{
-  padding: 30px 16px;
-  max-width: 980px;
-  margin: 0 auto;
+  flex:1;
+  padding: 0;
+  margin: 0;
+  max-width: none;
 }
 
 .chat__panel{
   max-width: 760px;
   margin: 0 auto;
-  background: linear-gradient(180deg,var(--panel),var(--panel-2));
+  background: linear-gradient(180deg, rgba(18,20,22,.78), rgba(26,28,31,.62));
   border:1px solid var(--border);
-  border-radius:18px;
+  border-radius: 20px;
   overflow:hidden;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
 }
 
 /* ===== START SCREEN ===== */
-
 .chat__start{
-  padding:18px 16px;
+  padding: 22px 18px 18px;
 }
 
 .chat__startTop{
-  margin-bottom:12px;
+  margin-bottom: 12px;
 }
 
 .chat__hint{
-  margin:0;
+  margin: 6px 0 0;
   color: var(--muted);
-  font-size:13px;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .chat__startRow{
   display:flex;
   gap:10px;
-  margin-top:14px;
+  margin-top:16px;
 }
 
 .chat__uidRow{
@@ -88,7 +94,7 @@ body{
 
 .chat__uidChip{
   border:1px solid var(--border);
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.06);
   color: var(--text);
   border-radius:999px;
   padding:6px 12px;
@@ -98,26 +104,31 @@ body{
 }
 
 .chat__uidChip:hover{
-  background: rgba(59,130,246,.18);
-  border-color: rgba(59,130,246,.45);
+  background: rgba(37,211,102,.12);
+  border-color: rgba(37,211,102,.40);
 }
 
 /* ===== HEADER ===== */
-
 .chat__header{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  padding:14px 16px;
+  align-items:flex-start;
+  gap: 12px;
+  padding: 16px 18px;
   border-bottom:1px solid var(--border);
+
+  /* siyah + hafif vurgu */
+  background: linear-gradient(90deg, rgba(37,211,102,.10), rgba(255,255,255,.03));
 }
 
 .chat__title{
   margin:0;
-  font-size:18px;
+  font-size:20px;
+  letter-spacing: .2px;
 }
 
 .chat__sub{
+  margin-top: 4px;
   font-size:12px;
   color:var(--muted);
 }
@@ -133,65 +144,63 @@ body{
   padding:6px 10px;
   border-radius:999px;
   border:1px solid var(--border);
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.05);
 }
 
 .badge--online{
-  background: rgba(59,130,246,.15);
-  border-color: rgba(59,130,246,.35);
+  background: rgba(37,211,102,.12);
+  border-color: rgba(37,211,102,.34);
 }
 
 .badge--typing{
-  background: rgba(148,163,184,.12);
-}
-
-.badge--seen{
-  background: rgba(96,165,250,.22);
-  border-color: rgba(96,165,250,.55);
-  color: #0B0F14;
-  font-weight:600;
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.14);
 }
 
 /* ===== MESSAGES ===== */
-
 .chat__box{
-  height:420px;
+  height: 460px;
   overflow:auto;
-  padding:14px 12px;
+  padding: 16px 14px;
+
+  /* mesaj alanı siyahın açık tonu */
+  background: rgba(10,10,10,.35);
 }
 
-.chat__box::-webkit-scrollbar{
-  width:10px;
-}
-
+.chat__box::-webkit-scrollbar{ width:10px; }
 .chat__box::-webkit-scrollbar-thumb{
-  background: rgba(226,232,240,.12);
+  background: rgba(255,255,255,.12);
   border-radius:999px;
 }
 
 .chat__row{
   display:flex;
-  margin:8px 0;
+  margin: 10px 0;
 }
 
-.chat__row--me{
-  justify-content:flex-end;
-}
-
-.chat__row--other{
-  justify-content:flex-start;
-}
+.chat__row--me{ justify-content:flex-end; }
+.chat__row--other{ justify-content:flex-start; }
 
 .chat__bubble{
   position: relative;
-  max-width:min(70%,520px);
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid var(--border);
+  max-width: min(72%, 540px);
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+
+  /* premium glass */
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  backdrop-filter: blur(10px);
 }
 
 .chat__bubble--me{
   background: var(--me);
+  border-color: rgba(37,211,102,.28);
+  box-shadow:
+    0 12px 30px rgba(37,211,102,.12),
+    inset 0 1px 0 rgba(255,255,255,.10);
 }
 
 .chat__bubble--other{
@@ -199,56 +208,9 @@ body{
 }
 
 .chat__meta{
-  font-size:11px;
+  font-size: 11px;
   color: var(--muted);
-  margin-bottom:4px;
-}
-
-/* ===== COMPOSER ===== */
-
-.chat__composer{
-  display:flex;
-  gap:10px;
-  padding:12px;
-  border-top:1px solid var(--border);
-  background: rgba(0,0,0,.25);
-}
-
-.chat__input{
-  flex:1;
-  padding:12px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.03);
-  color:var(--text);
-  outline:none;
-}
-
-.chat__input:focus{
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
-}
-
-.chat__input::placeholder{
-  color: rgba(226,232,240,.45);
-}
-
-.chat__btn{
-  padding:12px 16px;
-  border-radius:14px;
-  border:1px solid rgba(59,130,246,.4);
-  background: rgba(59,130,246,.18);
-  color: var(--text);
-  cursor:pointer;
-  transition:.2s;
-}
-
-.chat__btn:hover{
-  background: rgba(59,130,246,.28);
-}
-
-.chat__btn:active{
-  transform: translateY(1px);
+  margin-bottom: 6px;
 }
 
 /* Text + Tick same row */
@@ -261,25 +223,27 @@ body{
 .chat__text{
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.35;
 }
 
 /* ✓ / ✓✓ */
 .chat__tick{
   font-size: 12px;
   line-height: 1;
-  color: rgba(226,232,240,.55); /* gri */
+  color: rgba(255,255,255,.55);
   user-select: none;
   margin-left: auto;
 }
 
 .chat__tick--seen{
-  color: var(--seen); /* mavi (60A5FA) */
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--seen);
+  text-shadow: 0 0 14px rgba(223,248,204,.22);
 }
 
-/* ===== Message Actions (always visible under my messages) ===== */
+/* ===== Message Actions ===== */
 .chat__actions{
-  margin-top: 8px;
+  margin-top: 10px;
   display: flex;
   justify-content: flex-end;
 }
@@ -288,25 +252,66 @@ body{
   font-size: 12px;
   padding: 6px 10px;
   border-radius: 10px;
-
-  border: 1px solid rgba(248,113,113,.35);
-  background: rgba(248,113,113,.08);
-  color: #f87171;
-
+  border: 1px solid rgba(255,77,77,.55);
+  background: rgba(255,77,77,.10);
+  color: var(--danger);
   cursor: pointer;
   transition: .2s;
 }
 
 .chat__delete:hover{
-  background: rgba(248,113,113,.16);
-  border-color: rgba(248,113,113,.55);
+  background: rgba(255,77,77,.18);
+  border-color: rgba(255,77,77,.75);
 }
+
+/* ===== COMPOSER ===== */
+.chat__composer{
+  display:flex;
+  gap:10px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+
+  /* mesaj yazma alanı siyahın açık tonu */
+  background: rgba(18,18,18,.60);
+}
+
+.chat__input{
+  flex:1;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(30,30,30,.60); /* siyahın açık tonu */
+  color: var(--text);
+  outline:none;
+}
+
+.chat__input:focus{
+  border-color: rgba(37,211,102,.70);
+  box-shadow: 0 0 0 3px rgba(37,211,102,.16);
+}
+
+.chat__input::placeholder{
+  color: rgba(246,247,251,.42);
+}
+
+.chat__btn{
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(37,211,102,.45);
+  background: rgba(37,211,102,.18);
+  color: var(--text);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.chat__btn:hover{ background: rgba(37,211,102,.26); }
+.chat__btn:active{ transform: translateY(1px); }
 
 /* ===== Modal ===== */
 .modal__backdrop{
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.55);
+  background: rgba(0,0,0,.70);
   display: grid;
   place-items: center;
   padding: 18px;
@@ -315,11 +320,12 @@ body{
 
 .modal{
   width: min(520px, 100%);
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  background: linear-gradient(180deg, rgba(18,20,22,.92), rgba(26,28,31,.84));
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow);
   padding: 16px;
+  backdrop-filter: blur(12px);
 }
 
 .modal__title{
@@ -335,7 +341,7 @@ body{
 
 .modal__preview{
   border: 1px solid var(--border);
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.06);
   border-radius: 12px;
   padding: 10px;
   font-size: 13px;
@@ -357,14 +363,14 @@ body{
   padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.06);
   color: var(--text);
   cursor: pointer;
   transition: .2s;
 }
 
 .modal__btn:hover{
-  background: rgba(255,255,255,.08);
+  background: rgba(255,255,255,.10);
 }
 
 .modal__btn--ghost{
@@ -372,11 +378,162 @@ body{
 }
 
 .modal__btn--danger{
-  border-color: rgba(248,113,113,.45);
-  background: rgba(248,113,113,.14);
-  color: #fca5a5;
+  border-color: rgba(255,77,77,.55);
+  background: rgba(255,77,77,.14);
+  color: var(--danger);
 }
 
 .modal__btn--danger:hover{
-  background: rgba(248,113,113,.22);
+  background: rgba(255,77,77,.22);
+}
+
+/* ===== Layout + Sidebar ===== */
+.chatLayout{
+  display:flex;
+  gap:16px;
+  align-items:stretch;
+  max-width:1200px;
+  margin: 0 auto;
+  padding: 30px 16px;
+}
+
+.sidebar{
+  width: 320px;
+  min-width: 280px;
+
+  /* kişi listesi paneli siyahın açık tonu */
+  background: linear-gradient(180deg, rgba(18,18,18,.70), rgba(12,12,12,.55));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.sidebar__top{
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar__title{
+  margin: 0 0 10px;
+  font-size: 14px;
+  letter-spacing: .2px;
+}
+
+.sidebar__me{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.sidebar__meLabel{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sidebar__meChip{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(30,30,30,.55);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor:pointer;
+  transition: .2s;
+}
+
+.sidebar__meChip:hover{
+  border-color: rgba(37,211,102,.40);
+  background: rgba(37,211,102,.10);
+}
+
+.sidebar__list{
+  padding: 10px;
+  max-height: calc(100vh - 160px);
+  overflow: auto;
+}
+
+.sidebar__item{
+  width:100%;
+  text-align:left;
+  border:1px solid rgba(255,255,255,.10);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 10px 10px;
+  cursor: pointer;
+  transition: .15s;
+  margin-bottom: 10px;
+
+  /* normal item: koyu */
+  background: rgba(30,30,30,.50);
+}
+
+.sidebar__item:hover{
+  background: rgba(40,40,40,.55);
+  border-color: rgba(255,255,255,.14);
+}
+
+.sidebar__item--active{
+  border-color: rgba(37,211,102,.55);
+  background: rgba(37,211,102,.10);
+}
+
+.sidebar__row{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.sidebar__name{
+  font-size: 13px;
+  font-weight: 650;
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__time{
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sidebar__last{
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(246,247,251,.62);
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__empty{
+  padding: 18px 8px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* delete X kırmızı */
+.sidebar__delete{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:1px solid rgba(255,77,77,.60);
+  background: rgba(255,77,77,.10);
+  color: var(--danger);
+  font-size:12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s;
+}
+
+.sidebar__delete:hover{
+  background: rgba(255,77,77,.20);
+  border-color: rgba(255,77,77,.85);
 }

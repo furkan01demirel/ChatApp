@@ -1,44 +1,72 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { auth, db } from "./firebase/firebase";
 import {
-  addDoc, // koleksiyona yeni doküman ekler (mesaj eklemek).
-  collection, //koleksiyon referansı üretir.
-  doc, // doküman referansı üretir.
-  onSnapshot, // realtime dinleyici (Firestore değişince cb çalışır).
+  addDoc,
+  collection,
+  doc,
+  onSnapshot,
   orderBy,
-  query, // sorgu oluşturur.
-  serverTimestamp, // tarih/saat’i client’ın değil Firebase sunucusunun zamanı ile yazar
-  setDoc, // dokümanı yazar/günceller (online/typing/read için).
-  updateDoc, // var olan dokümanı günceller (conversation lastMessage alanları).
-  deleteDoc , // mesajları silmek için
+  query,
+  serverTimestamp,
+  setDoc,
+  deleteDoc,
+  where,
+  getDocs
 } from "firebase/firestore";
-import { createOrGetConversation } from "./chat/createOrGetConversation"; 
+import { createOrGetConversation } from "./chat/createOrGetConversation";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Chat() {
-  const me = auth.currentUser; // anlık login olan olan user'ı alıyor google auth ile giriş yaptığımız için alabiliyoruz
+  // ✅ Hook’lar her render’da aynı sırada çalışmalı
+  const [me, setMe] = useState(null);
 
-  const [otherUid, setOtherUid] = useState(""); // şaunda diğer konuacağı kişinin Uid'ni alıp input'a yazıp konuşuyoruz
-  const [conversationId, setConversationId] = useState(null); // bir id üretiliyor bu id firebase mimarisi için gerekli sohbetin id'si
-  const [confirmDelete, setConfirmDelete]=useState(null);
+  const [otherUid, setOtherUid] = useState("");
+  const [conversationId, setConversationId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [conversations, setConversations] = useState([]);
 
-  const [messages, setMessages] = useState([]); // Ekranda gösterilecek mesajalar yani eski mesajlar
-  const [text, setText] = useState(""); // gönderilecek mesaj
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState("");
 
-  const [otherTyping, setOtherTyping] = useState(false); // karşı tarafın yazıp yazmadığına bakıyor
-  const [otherOnline, setOtherOnline] = useState(null); // karşı tarafın online olup olmadığına bakıyor
-  const [otherLastSeenAt, setOtherLastSeenAt] = useState(null); //Karşı tarafın son giriş tarihi
-  const [otherLastReadAt, setOtherLastReadAt] = useState(null); // okundu mesajı için
+  const [otherTyping, setOtherTyping] = useState(false);
+  const [otherOnline, setOtherOnline] = useState(null);
+  const [otherLastSeenAt, setOtherLastSeenAt] = useState(null);
+  const [otherLastReadAt, setOtherLastReadAt] = useState(null);
 
-  const bottomRef = useRef(null); // auto scroll için
-  const typingTimerRef = useRef(null); // yazdıktan sonra 800 ms içinde yazmayı bıraktığımı göstermek için
+  const bottomRef = useRef(null);
+  const typingTimerRef = useRef(null);
 
-  // --- Online: kendimi online yap ---
+  // Auth listener
   useEffect(() => {
-    const myRef = doc(db, "users", me.uid); // kendi uid'im üzerinden dokümanımın referansını oluşturuyorum 
+    const unsub = onAuthStateChanged(auth, (user) => setMe(user));
+    return unsub;
+  }, []);
+
+  const myUid = me?.uid;
+
+  // konuşma listesi
+  useEffect(() => {
+    if (!myUid) return;
+    const q = query(
+      collection(db, "conversations"),
+      where("members", "array-contains", myUid)
+      
+    );
+    return onSnapshot(q, (snap) => {
+      const rows = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      rows.sort((a,b) => (b.lastMessageAt?.toMillis?.() ?? 0) - (a.lastMessageAt?.toMillis?.() ?? 0));
+      setConversations(rows);
+    });
+  }, [myUid]);
+
+  // ✅ Online/offline: myUid yokken çalışmasın
+  useEffect(() => {
+    if (!myUid) return;
+
+    const myRef = doc(db, "users", myUid);
 
     const setOnline = async () => {
-      await setDoc( // setDoc ile bilgilerimi set ediyorum online oluyorum ve 
-      // merge true ilede dokğmanı komple ezme sadece bu alanları güncelle diyorum
+      await setDoc(
         myRef,
         { isOnline: true, lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp() },
         { merge: true }
@@ -47,7 +75,7 @@ export default function Chat() {
 
     const setOffline = async () => {
       try {
-        await setDoc( // setDoc ile bilgilerimi set ediyorum offline oluyorum ve sadece bu bilgiler değişiyor
+        await setDoc(
           myRef,
           { isOnline: false, lastSeenAt: serverTimestamp(), updatedAt: serverTimestamp() },
           { merge: true }
@@ -55,66 +83,62 @@ export default function Chat() {
       } catch {}
     };
 
-    setOnline(); // sayfa açılır açılmaz online oluyorum
+    setOnline();
 
-    
-    window.addEventListener("beforeunload", setOffline); // tarayıcı sekmesi kapanırken beforeunload çalışır
-    return () => window.removeEventListener("beforeunload", setOffline); // tarayıcıyı kapatınca beni offline yap
-  }, [me.uid]);
+    window.addEventListener("beforeunload", setOffline);
+    return () => window.removeEventListener("beforeunload", setOffline);
+  }, [myUid]);
 
   const openConversation = async () => {
-    const uid = otherUid.trim(); // karşı tarafın Uid'sini al
-    if (!uid) return;// boş mu diye kontrol et
-    if (uid === me.uid) return alert("Kendi UID'ni giremezsin 🙂");// kendi uid'ini girmeyi engelle
+    const uid = otherUid.trim();
+    if (!uid) return;
+    if (!myUid) return;
+    if (uid === myUid) return alert("Kendi UID'ni giremezsin 🙂");
 
-    const cid = await createOrGetConversation(me.uid, uid); // conversation varsa döndür yoksa yeni oluştur
-    setConversationId(cid);// conversation'nu set et böylece chatleşmeye başlanabilir
+    const cid = await createOrGetConversation(myUid, uid);
+    setConversationId(cid);
   };
 
-
-  const messagesRef = useMemo(() => {// her render da yeniden oluşturmaması için useMemo sadece conversationid değişince
-    if (!conversationId) return null; // conversation yoksa mesaj koleksiyonuda yok
-    return collection(db, "conversations", conversationId, "messages"); // conversation gelince koleksiyonu referans oluştur
+  const messagesRef = useMemo(() => {
+    if (!conversationId) return null;
+    return collection(db, "conversations", conversationId, "messages");
   }, [conversationId]);
 
-  const otherUserRef = useMemo(() => { //otherUid veya conversationId değişince ref yenilenir.
+  const otherUserRef = useMemo(() => {
     if (!conversationId) return null;
-    const uid = otherUid.trim();// karşı tarafın uid sini al
+    const uid = otherUid.trim();
     if (!uid) return null;
-    return doc(db, "users", uid); // chat açılınca karşı tarafın users/{uid} dokümanını dinleyeceğiz
+    return doc(db, "users", uid);
   }, [conversationId, otherUid]);
 
-//Realtime dinleme
+  // Realtime messages
   useEffect(() => {
-    if (!messagesRef) return; // conversation yoksa dinleme yok
-
-    const q = query(messagesRef, orderBy("createdAt", "asc")); // mesajları createdAt artan sırada çek (en eski → en yeni)
-    return onSnapshot(q, (snap) => { // Firestore da mesaj değişince otomatik gelir.
-      const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // her dokümana id ekleyerek react listesinde key yapıyoruz
-      setMessages(rows); // mesajı ekrana bakıyoruz
+    if (!messagesRef) return;
+    const q = query(messagesRef, orderBy("createdAt", "asc"));
+    return onSnapshot(q, (snap) => {
+      const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setMessages(rows);
     });
   }, [messagesRef]);
 
-  // --- Auto-scroll ---
+  // Auto-scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });// her mesaj geldiğinde (messages.length değişince) en alttaki ref'e scroll yap
-    //?. ile null safety yaptık
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  // --- Typing: karşı tarafı dinle ---
+  // Typing dinle
   useEffect(() => {
     if (!conversationId) return;
     const uid = otherUid.trim();
     if (!uid) return;
-   //typing/{uid} dokümanını dinle
-   //isTyping true ise UI’da “yazıyor…” bas.
-    const otherTypingRef = doc(db, "conversations", conversationId, "typing", uid); // yani karşı tarafın dokümanını alıp kullanıyoruz
+
+    const otherTypingRef = doc(db, "conversations", conversationId, "typing", uid);
     return onSnapshot(otherTypingRef, (snap) => {
       setOtherTyping(Boolean(snap.data()?.isTyping));
     });
   }, [conversationId, otherUid]);
 
-  // --- Online/lastSeen: karşı taraf users/{otherUid} dinle ---
+  // Online/lastSeen dinle
   useEffect(() => {
     if (!otherUserRef) return;
     return onSnapshot(otherUserRef, (snap) => {
@@ -124,7 +148,7 @@ export default function Chat() {
     });
   }, [otherUserRef]);
 
-  // --- Seen: reads/{otherUid} dinle ---
+  // Reads dinle
   useEffect(() => {
     if (!conversationId) return;
     const uid = otherUid.trim();
@@ -134,40 +158,39 @@ export default function Chat() {
     return onSnapshot(otherReadRef, (snap) => {
       setOtherLastReadAt(snap.data()?.lastReadAt ?? null);
     });
-  }, [conversationId, otherUid]); // Bu effect sadece conversationId veya otherUid değişirse tekrar çalışsın.
+  }, [conversationId, otherUid]);
 
-  // --- Seen: ben bu chatteyken okundu işareti güncelle ---
+  // Okundu işareti yaz
   useEffect(() => {
     if (!conversationId) return;
-    const myReadRef = doc(db, "conversations", conversationId, "reads", me.uid); // kendi read dokümanımı aldım
+    if (!myUid) return;
 
-    // sohbet açıkken her mesaj değişiminde "okudum" diye işaretle
+    const myReadRef = doc(db, "conversations", conversationId, "reads", myUid);
+
     const markRead = async () => {
       await setDoc(
         myReadRef,
         { lastReadAt: serverTimestamp(), updatedAt: serverTimestamp() },
-        { merge: true } // okudum zamanını güncelle
+        { merge: true }
       );
     };
 
-    if (messages.length > 0) markRead(); // yeni mesaj geldikçe markRead çalışır
-  }, [conversationId, messages.length, me.uid]);
+    if (messages.length > 0) markRead();
+  }, [conversationId, messages.length, myUid]);
 
-  const setMyTyping = async (isTyping) => { // benim typing dokümanımı yazar/günceller.
+  const setMyTyping = async (isTyping) => {
     if (!conversationId) return;
-    const myTypingRef = doc(db, "conversations", conversationId, "typing", me.uid);
+    if (!myUid) return;
+    const myTypingRef = doc(db, "conversations", conversationId, "typing", myUid);
     await setDoc(myTypingRef, { isTyping, updatedAt: serverTimestamp() }, { merge: true });
   };
 
   const onChangeText = async (v) => {
-    setText(v);// input değişince text state güncellenir.
-
+    setText(v);
     if (!conversationId) return;
 
-    // yazmaya başlayınca typing true
-    await setMyTyping(v.trim().length > 0); // boş değilse typing true
+    await setMyTyping(v.trim().length > 0);
 
-    // kullanıcı yazmayı bırakırsa 800ms sonra typing false (debounce)
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
       setMyTyping(false);
@@ -176,49 +199,157 @@ export default function Chat() {
 
   const send = async () => {
     const t = text.trim();
-    if (!t || !messagesRef) return; // boş mesajı engelle
+    if (!t || !messagesRef || !myUid) return;
 
-    setText(""); // input’u temizle
-    await setMyTyping(false); // typing’i kapat (mesaj gönderince artık yazmıyor)
+    setText("");
+    await setMyTyping(false);
 
-    await addDoc(messagesRef, { // yeni message doc ekler
-      senderId: me.uid, // Gönderen
-      text: t, // mesaj
-      createdAt: serverTimestamp(), // server timestamp
+    await addDoc(messagesRef, {
+      senderId: myUid,
+      text: t,
+      createdAt: serverTimestamp(),
     });
-
-    
-
-    // preview güncelle (opsiyonel ama iyi)
-    // await updateDoc(doc(db, "conversations", conversationId), {
-    //   lastMessageText: t,
-    //   lastMessageAt: serverTimestamp(),
-    //   lastMessageSenderId: me.uid,
-    // });
   };
-  const deleteMessage  = async (messageId) =>{
-      if (!conversationId) return;
-      try{
-        await deleteDoc(
-          doc(db, "conversations", conversationId, "messages", messageId)// conversations/{conversationId}/messages/{messageId}
-        ); 
-      }catch(err){
-        console.error("Delete error:", err);
-      }
-     
-    };
-  //  Görüldü hesaplama
-  const myLastMsg = [...messages].reverse().find((m) => m.senderId === me.uid);
-  // mesajların tersini al (en yeni en başa gelsin)
-  // benim son gönderdiğim mesajı bul
-  const seen =
-    myLastMsg?.createdAt && // benim son mesajımın createdAt’i var
-    otherLastReadAt && // karşı tarafın lastReadAt’i var
-    typeof otherLastReadAt.toMillis === "function" && // ikisi Timestamp ise .toMillis() vardır
-    typeof myLastMsg.createdAt.toMillis === "function" &&
-    otherLastReadAt.toMillis() >= myLastMsg.createdAt.toMillis(); // karşı tarafın okuma zamanı, benim son mesajımdan sonra ise → “görüldü”
 
+  const deleteMessage = async (messageId) => {
+    if (!conversationId) return;
+    try {
+      await deleteDoc(doc(db, "conversations", conversationId, "messages", messageId));
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const deleteConversation = async (cid) => {
+  try {
+    // messages sil
+    const msgsRef = collection(db, "conversations", cid, "messages");
+    const msgsSnap = await getDocs(msgsRef);
+
+    for (const d of msgsSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+
+    // typing sil
+    const typingRef = collection(db, "conversations", cid, "typing");
+    const typingSnap = await getDocs(typingRef);
+
+    for (const d of typingSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+
+    // reads sil
+    const readsRef = collection(db, "conversations", cid, "reads");
+    const readsSnap = await getDocs(readsRef);
+
+    for (const d of readsSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+
+    // conversation ana doc sil
+    await deleteDoc(doc(db, "conversations", cid));
+
+    // eğer açık chat buysa kapat
+    if (conversationId === cid) {
+      setConversationId(null);
+      setMessages([]);
+    }
+
+  } catch (err) {
+    console.error("Conversation delete error:", err);
+  }
+};
+
+  // Görüldü hesaplama
+  const myLastMsg = [...messages].reverse().find((m) => m.senderId === myUid);
+  const seen =
+    myLastMsg?.createdAt &&
+    otherLastReadAt &&
+    typeof otherLastReadAt.toMillis === "function" &&
+    typeof myLastMsg.createdAt.toMillis === "function" &&
+    otherLastReadAt.toMillis() >= myLastMsg.createdAt.toMillis();
+
+  // ✅ Loading UI: hook’lardan sonra koşullu render
+  if (!me) {
+    return <div style={{ padding: 24, color: "#fff" }}>Yükleniyor...</div>;
+  }
 return (
+  <div className="chatLayout">
+    {/* LEFT SIDEBAR */}
+    <aside className="sidebar">
+      <div className="sidebar__top">
+        <h3 className="sidebar__title">Sohbetler</h3>
+
+        <div className="sidebar__me">
+          <span className="sidebar__meLabel">Benim UID</span>
+          <button
+            className="sidebar__meChip"
+            onClick={() => navigator.clipboard.writeText(myUid)}
+            title="Kopyalamak için tıkla"
+            type="button"
+          >
+            {myUid}
+          </button>
+        </div>
+      </div>
+
+      <div className="sidebar__list">
+        {conversations?.length ? (
+          conversations.map((c) => {
+            const other = Array.isArray(c.members)
+              ? c.members.find((u) => u !== myUid)
+              : null;
+
+            const lastText = c.lastMessageText ? String(c.lastMessageText) : "Mesaj yok";
+
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`sidebar__item ${c.id === conversationId ? "sidebar__item--active" : ""}`}
+                onClick={() => {
+                  if (!other) return;
+                  setConversationId(c.id);
+                  setOtherUid(other);
+                }}
+              >
+                <div className="sidebar__row">
+                <div className="sidebar__name">{other || "?"}</div>
+
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  <div className="sidebar__time">
+                    {c.lastMessageAt?.toDate?.()?.toLocaleTimeString?.([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }) ?? ""}
+                  </div>
+
+                  <button
+                    className="sidebar__delete"
+                    onClick={(e) => {
+                      e.stopPropagation(); // chat açılmasın
+                      deleteConversation(c.id);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+                <div className="sidebar__last">{lastText}</div>
+              </button>
+            );
+          })
+        ) : (
+          <div className="sidebar__empty">
+            Henüz sohbet yok. <br />
+            Sağdan UID ile sohbet başlat.
+          </div>
+        )}
+      </div>
+    </aside>
+
+    {/* RIGHT PANEL*/}
     <div className="chat">
       <div className="chat__panel">
         {!conversationId ? (
@@ -226,7 +357,7 @@ return (
             <div className="chat__startTop">
               <h2 className="chat__title">Sohbet Aç</h2>
               <p className="chat__hint">
-                Şimdilik UID ile açıyoruz (MVP). Sonra kullanıcı listesi + arama ekleriz.
+                Karşı tarafın UID bilgisini yazıp "Sohbeti Aç" butonuna tıklayın
               </p>
             </div>
 
@@ -243,14 +374,14 @@ return (
             </div>
 
             <div className="chat__uidRow">
-              <span className="chat__uidLabel">Benim UID</span>
+              <span className="chat__uidLabel">Benim UID "Kopyalamak için tıkla"</span>
               <button
                 className="chat__uidChip"
-                onClick={() => navigator.clipboard.writeText(me.uid)}
+                onClick={() => navigator.clipboard.writeText(myUid)}
                 title="Kopyalamak için tıkla"
                 type="button"
               >
-                {me.uid}
+                {myUid}
               </button>
             </div>
           </div>
@@ -259,17 +390,19 @@ return (
             <div className="chat__header">
               <div>
                 <h2 className="chat__title">Sohbet</h2>
+
                 <div className="chat__uidRow">
-              <span className="chat__uidLabel">Benim UID</span>
-              <button
-                className="chat__uidChip"
-                onClick={() => navigator.clipboard.writeText(me.uid)}
-                title="Kopyalamak için tıkla"
-                type="button"
-              >
-                {me.uid}
-              </button>
-            </div>
+                  <span className="chat__uidLabel">Benim UID "Kopyalamak için tıkla"</span>
+                  <button
+                    className="chat__uidChip"
+                    onClick={() => navigator.clipboard.writeText(myUid)}
+                    title="Kopyalamak için tıkla"
+                    type="button"
+                  >
+                    {myUid}
+                  </button>
+                </div>
+
                 <div className="chat__sub">
                   {otherOnline === null
                     ? "Durum alınıyor..."
@@ -282,19 +415,14 @@ return (
               <div className="chat__badges">
                 {otherOnline ? <span className="badge badge--online">online</span> : null}
                 {otherTyping ? <span className="badge badge--typing">yazıyor…</span> : null}
-                {/* {seen ? <span className="badge badge--seen">görüldü ✓</span> : null} */}
               </div>
             </div>
 
             <div className="chat__box">
               {messages.map((m) => {
-                const isMe = m.senderId === me.uid;
+                const isMe = m.senderId === myUid;
 
-                // Bu mesaj benim en son mesajım mı?
-                const isMyLast =
-                  isMe && myLastMsg && m.id === myLastMsg.id;
-
-                // Okundu durumu sadece benim en son mesajım için
+                const isMyLast = isMe && myLastMsg && m.id === myLastMsg.id;
                 const tick = isMyLast ? (seen ? "✓✓" : "✓") : null;
 
                 return (
@@ -312,20 +440,20 @@ return (
                           <span className={`chat__tick ${seen ? "chat__tick--seen" : ""}`}>
                             {tick}
                           </span>
-                        ) : null} 
+                        ) : null}
                       </div>
+
                       {isMe ? (
                         <div className="chat__actions">
-                        <button
-                          className="chat__delete"
-                          type="button"
-                          onClick={() => setConfirmDelete({ id: m.id, text: m.text })}
-                        >
-                          Sil
-                        </button>
-                      </div>
+                          <button
+                            className="chat__delete"
+                            type="button"
+                            onClick={() => setConfirmDelete({ id: m.id, text: m.text })}
+                          >
+                            Sil
+                          </button>
+                        </div>
                       ) : null}
-                      
                     </div>
                   </div>
                 );
@@ -341,51 +469,47 @@ return (
                 placeholder="Mesaj yaz…"
                 onKeyDown={(e) => e.key === "Enter" && send()}
               />
-              
+
               <button className="chat__btn" onClick={send}>
                 Gönder
               </button>
-
             </div>
-            
           </>
         )}
       </div>
+
       {confirmDelete ? (
-  <div className="modal__backdrop" onClick={() => setConfirmDelete(null)}>
-    <div className="modal" onClick={(e) => e.stopPropagation()}>
-      <h3 className="modal__title">Mesaj silinsin mi?</h3>
-      <p className="modal__text">
-        Bu işlem geri alınamaz.
-      </p>
+        <div className="modal__backdrop" onClick={() => setConfirmDelete(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal__title">Mesaj silinsin mi?</h3>
+            <p className="modal__text">Bu işlem geri alınamaz.</p>
 
-      <div className="modal__preview">
-        {confirmDelete.text}
-      </div>
+            <div className="modal__preview">{confirmDelete.text}</div>
 
-      <div className="modal__actions">
-        <button
-          className="modal__btn modal__btn--ghost"
-          type="button"
-          onClick={() => setConfirmDelete(null)}
-        >
-          Vazgeç
-        </button>
+            <div className="modal__actions">
+              <button
+                className="modal__btn modal__btn--ghost"
+                type="button"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Vazgeç
+              </button>
 
-        <button
-          className="modal__btn modal__btn--danger"
-          type="button"
-          onClick={async () => {
-            await deleteMessage(confirmDelete.id);
-            setConfirmDelete(null);
-          }}
-        >
-          Sil
-        </button>
-      </div>
+              <button
+                className="modal__btn modal__btn--danger"
+                type="button"
+                onClick={async () => {
+                  await deleteMessage(confirmDelete.id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   </div>
-) : null}
-    </div>
-  );
+);
 }
