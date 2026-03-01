@@ -17,9 +17,9 @@ import { createOrGetConversation } from "./chat/createOrGetConversation";
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function Chat() {
-  // ✅ Hook’lar her render’da aynı sırada çalışmalı
+ 
   const [me, setMe] = useState(null);
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [otherUid, setOtherUid] = useState("");
   const [conversationId, setConversationId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -275,8 +275,14 @@ export default function Chat() {
   }
 return (
   <div className="chatLayout">
+    {isSidebarOpen ? (
+      <div
+        className="sidebarOverlay"
+        onClick={() => setIsSidebarOpen(false)}
+      />
+    ) : null}
     {/* LEFT SIDEBAR */}
-    <aside className="sidebar">
+    <aside className={`sidebar ${isSidebarOpen ? "sidebar--open" : ""}`}>
       <div className="sidebar__top">
         <h3 className="sidebar__title">Sohbetler</h3>
 
@@ -311,6 +317,7 @@ return (
                   if (!other) return;
                   setConversationId(c.id);
                   setOtherUid(other);
+                  setIsSidebarOpen(false);
                 }}
               >
                 <div className="sidebar__row">
@@ -389,6 +396,14 @@ return (
           <>
             <div className="chat__header">
               <div>
+                <button
+                  className="chat__menuBtn"
+                  type="button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Sohbet listesini aç"
+                >
+                  ☰
+                </button>
                 <h2 className="chat__title">Sohbet</h2>
 
                 <div className="chat__uidRow">
