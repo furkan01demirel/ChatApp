@@ -404,7 +404,8 @@ return (
                 >
                   ☰
                 </button>
-                <h2 className="chat__title">Sohbet</h2>
+                <div style={{flex:1}}>
+                  <h2 className="chat__title">Sohbet</h2>
 
                 <div className="chat__uidRow">
                   <span className="chat__uidLabel">Benim UID "Kopyalamak için tıkla"</span>
@@ -425,6 +426,8 @@ return (
                     ? "Online"
                     : `Offline • last seen: ${otherLastSeenAt?.toDate?.()?.toLocaleString?.() ?? "?"}`}
                 </div>
+                </div>
+                
               </div>
 
               <div className="chat__badges">
