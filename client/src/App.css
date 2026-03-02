@@ -9,8 +9,8 @@
 
   --border: rgba(255,255,255,.10);
 
-  --me: rgba(37, 211, 102, .16);
-  --other: rgba(255,255,255,.06);
+  --me: rgba(20, 77, 55);
+  --other: rgba(29, 30, 30);
 
   --accent: #25D366;
   --accent-2: #128E80;
@@ -31,10 +31,8 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto;
   color: var(--text);
   background:
-    radial-gradient(900px 650px at 12% 18%, rgba(37,211,102,.10), transparent 62%),
-    radial-gradient(900px 650px at 88% 20%, rgba(18,142,128,.08), transparent 62%),
-    radial-gradient(900px 720px at 55% 92%, rgba(255,255,255,.05), transparent 62%),
-    linear-gradient(180deg, #030304, var(--bg));
+  linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.75)),
+  url('../public/wpBackgroundGreenTon.png') center/cover no-repeat fixed;
 }
 
 /* ===== APP SHELL + TOPBAR (LivePing hep üstte) ===== */
@@ -45,7 +43,7 @@ body{
   top: 0;
   z-index: 2000;
   border-bottom: 1px solid rgba(255,255,255,.08);
-  background: rgba(10,10,10,.55);
+  background: rgba(22, 23, 23);
   backdrop-filter: blur(12px);
 }
 
@@ -157,7 +155,7 @@ body{
 .sidebar{
   width: 320px;
   min-width: 280px;
-  background: linear-gradient(180deg, rgba(18,18,18,.70), rgba(12,12,12,.55));
+  background: linear-gradient(180deg, rgba(29, 30, 30), rgba(12,12,12,.55));
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: var(--shadow);
@@ -220,7 +218,7 @@ body{
   cursor: pointer;
   transition: .15s;
   margin-bottom: 10px;
-  background: rgba(30,30,30,.50);
+  background: rgba(22, 23, 23);
 }
 
 .sidebar__item:hover{
@@ -230,7 +228,7 @@ body{
 
 .sidebar__item--active{
   border-color: rgba(37,211,102,.55);
-  background: rgba(37,211,102,.10);
+  background: rgba(20, 77, 55);
 }
 
 .sidebar__row{
@@ -359,7 +357,7 @@ body{
   gap: 12px;
   padding: 16px 18px;
   border-bottom:1px solid var(--border);
-  background: linear-gradient(90deg, rgba(37,211,102,.10), rgba(255,255,255,.03));
+  background: rgba(22, 23, 23);
 }
 
 .chat__title{ margin:0; font-size:20px; letter-spacing: .2px; }
@@ -390,7 +388,9 @@ body{
   height: 400px;
   overflow:auto;
   padding: 16px 14px;
-  background: rgba(10,10,10,.35);
+  background: linear-gradient(180deg, rgba(29, 30, 30), rgba(12,12,12,.55)),
+  url('../public/wpBackgroundGreenTon.png') center/cover no-repeat fixed;
+  
 }
 
 .chat__box::-webkit-scrollbar{ width:10px; }
@@ -489,7 +489,7 @@ body{
   padding: 12px 16px;
   border-radius: 14px;
   border: 1px solid rgba(37,211,102,.45);
-  background: rgba(37,211,102,.18);
+  background: rgba(20, 77, 55);
   color: var(--text);
   cursor:pointer;
   transition:.2s;
@@ -588,7 +588,7 @@ body{
     box-shadow: 0 30px 90px rgba(0,0,0,.75);
 
     /* mevcut görünümün */
-    background: linear-gradient(180deg, rgba(18,18,18,.70), rgba(12,12,12,.55));
+    background: linear-gradient(180deg, rgba(29, 30, 30), rgba(12,12,12,.55));
     border: 1px solid var(--border);
     overflow: hidden;
     backdrop-filter: blur(12px);
@@ -607,7 +607,7 @@ body{
     inset: var(--topbar-h) 0 0 0; /* ← topbar altından başlar */
     z-index: 1800;
 
-    background: rgba(0,0,0,.60);
+    background: rgba(22, 23, 23);
     backdrop-filter: blur(2px);
   }
 
@@ -616,6 +616,7 @@ body{
 
   /* Chat full screen */
   .chat__panel{
+    padding: 16px 18px;
     max-width: 100%;
     margin: 0;
     border-radius: 0;
@@ -630,6 +631,8 @@ body{
   .chat__header{
     align-items: center;
     padding: 12px 12px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
   }
 
   .chat__uidChip,

@@ -16,6 +16,7 @@ import {
 import { createOrGetConversation } from "./chat/createOrGetConversation";
 import { onAuthStateChanged } from "firebase/auth";
 
+
 export default function Chat() {
  
   const [me, setMe] = useState(null);
@@ -35,7 +36,7 @@ export default function Chat() {
 
   const bottomRef = useRef(null);
   const typingTimerRef = useRef(null);
-
+ 
   // Auth listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setMe(user));
@@ -346,6 +347,7 @@ return (
 
     {/* SAYFA İÇERİĞİ */}
     <div className="chatLayout">
+    
       {isSidebarOpen ? (
         <div
           className="sidebarOverlay"
@@ -478,8 +480,6 @@ return (
               <div className="chat__header">
                 <div style={{ flex: 1 }}>
                   <h2 className="chat__title">Sohbet</h2>
-
-                 
 
                   <div className="chat__sub">
                     {otherOnline === null
