@@ -324,7 +324,10 @@ return (
       <div className="appTopbar__inner">
         <div className="brand">
           <div className="brand__logo" aria-hidden="true">
-            <span className="brand__ring" />
+            <span className="brand__ring" onClick={() => {
+            setConversationId(null);
+            setOtherUid("");
+          }}/>
             <span className="brand__dot" />
           </div>
           <div className="brand__text">
@@ -358,7 +361,7 @@ return (
       {/* LEFT SIDEBAR */}
       <aside className={`sidebar ${isSidebarOpen ? "sidebar--open" : ""}`}>
         <div className="sidebar__top">
-          <h3 className="sidebar__title">Sohbetler</h3>
+          <h3 className="sidebar__title">💬 Sohbetler</h3>
 
           <div className="sidebar__me">
             <span className="sidebar__meLabel">Benim UID</span>
@@ -443,9 +446,9 @@ return (
           {!conversationId ? (
             <div className="chat__start">
               <div className="chat__startTop">
-                <h2 className="chat__title">Sohbet Aç</h2>
+                <h2 className="chat__title">Live Ping</h2>
                 <p className="chat__hint">
-                  Karşı tarafın UID bilgisini yazıp "Sohbeti Aç" butonuna tıklayın
+                  Karşı tarafın UID bilgisini yazıp "Sohbeti Oluştur" butonuna tıklayın
                 </p>
               </div>
 
@@ -457,7 +460,7 @@ return (
                   placeholder="Karşı taraf UID"
                 />
                 <button className="chat__btn" onClick={openConversation}>
-                  Sohbeti Aç
+                  💬 Sohbeti Oluştur
                 </button>
               </div>
 
@@ -479,7 +482,7 @@ return (
             <>
               <div className="chat__header">
                 <div style={{ flex: 1 }}>
-                  <h2 className="chat__title">Sohbet</h2>
+                  <h2 className="chat__title">LivePing</h2>
 
                   <div className="chat__sub">
                     {otherOnline === null

@@ -70,7 +70,8 @@ body{
   height: 34px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.10);
-  background: rgba(30,30,30,.55);
+  background: url("/homeIcon.png") center/18px 18px no-repeat,
+    rgba(30,30,30,.55);
   box-shadow: 0 10px 28px rgba(0,0,0,.35);
   display:grid;
   place-items:center;
@@ -78,11 +79,11 @@ body{
 }
 
 .brand__dot{
-  width: 8px;
-  height: 8px;
+  width: 1px;
+  height: 1px;
   border-radius: 999px;
   background: var(--accent);
-  box-shadow: 0 0 14px rgba(37,211,102,.45);
+  box-shadow: 0 0 14px rgba(20, 77, 55);
   display:block;
   position: relative;
   z-index: 2;
@@ -93,8 +94,10 @@ body{
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  border: 2px solid rgba(37,211,102,.55);
+  border: 2px solid rgba(20, 77, 55);
   animation: ping 1.6s ease-out infinite;
+  background:url('../public/homeIcon.png') center/cover no-repeat fixed;
+
 }
 
 @keyframes ping{
@@ -137,8 +140,8 @@ body{
 }
 
 .topbarMenuBtn:hover{
-  border-color: rgba(37,211,102,.35);
-  background: rgba(37,211,102,.10);
+  border-color: rgba(20, 77, 55);
+  background: rgba(20, 77, 55);
 }
 
 /* ===== Layout + Sidebar ===== */
@@ -416,7 +419,7 @@ body{
 .chat__bubble--me{
   background: var(--me);
   border-color: rgba(37,211,102,.28);
-  box-shadow: 0 12px 30px rgba(37,211,102,.12), inset 0 1px 0 rgba(255,255,255,.10);
+  /* box-shadow: 0 12px 30px rgba(37,211,102,.12), inset 0 1px 0 rgba(255,255,255,.10); */
 }
 
 .chat__bubble--other{ background: var(--other); }
